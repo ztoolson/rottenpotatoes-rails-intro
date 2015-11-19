@@ -15,16 +15,13 @@ class MoviesController < ApplicationController
     @sorted_column_css = Hash.new
     @movies = Movie.all
 
-    if params[:ratings] && params[:sort_by]
-      submitted_ratings = permitted_ratings_params || session[:ratings]
-      if submitted_ratings
-        session[:ratings] = submitted_ratings
-        @movies = @movies.where(:rating => submitted_ratings)
-      else
-        session[:ratings] = @all_ratings
-      end
+    submitted_ratings = permitted_ratings_params || session[:ratings]
+    sort_column = params[:sort_by] || session[:sort_by]
 
-      sort_column = params[:sort_by] || session[:sort_by]
+    if params[:ratings]
+      session[:ratings] = submitted_ratings
+      @movies = @movies.where(:rating => submitted_ratings)
+
       if sort_column
         session[:sort_by] = sort_column
         @sorted_column_css[sort_column.to_sym] = 'hilite'
@@ -33,10 +30,8 @@ class MoviesController < ApplicationController
         @movies
       end
     else
-      submitted_ratings = permitted_ratings_params || session[:ratings]
-      sort_column = params[:sort_by] || session[:sort_by]
-
-      params_backfilled_with_session_info = params.merge(:ratings => submitted_ratings).merge(:sort_by => sort_column)
+      session[:ratings] ||= @all_ratings
+      params_backfilled_with_session_info = params.merge(:ratings => session[:ratings])
       redirect_to movies_path(:params => params_backfilled_with_session_info)
     end
   end
