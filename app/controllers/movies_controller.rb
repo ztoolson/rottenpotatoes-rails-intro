@@ -11,7 +11,14 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+    @sorted_column_css = Hash.new
+    @movies = if params[:sort_by]
+                sort_column = params[:sort_by]
+                @sorted_column_css[sort_column.to_sym] = 'hilite'
+                Movie.order("#{sort_column} asc")
+              else
+                Movie.all
+              end
   end
 
   def new
