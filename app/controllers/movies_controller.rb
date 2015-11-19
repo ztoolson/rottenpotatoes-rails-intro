@@ -36,8 +36,8 @@ class MoviesController < ApplicationController
       submitted_ratings = permitted_ratings_params || session[:ratings]
       sort_column = params[:sort_by] || session[:sort_by]
 
-      params_filled = params.merge(:ratings => submitted_ratings).merge(:sort_by => sort_column)
-      redirect_to movies_path(:params => session_params)
+      params_backfilled_with_session_info = params.merge(:ratings => submitted_ratings).merge(:sort_by => sort_column)
+      redirect_to movies_path(:params => params_backfilled_with_session_info)
     end
   end
 
