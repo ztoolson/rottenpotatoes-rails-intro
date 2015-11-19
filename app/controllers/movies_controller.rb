@@ -11,14 +11,34 @@ class MoviesController < ApplicationController
   end
 
   def index
+    @all_ratings = Movie.ratings
     @sorted_column_css = Hash.new
-    @movies = if params[:sort_by]
-                sort_column = params[:sort_by]
-                @sorted_column_css[sort_column.to_sym] = 'hilite'
-                Movie.order("#{sort_column} asc")
-              else
-                Movie.all
-              end
+    @movies = Movie.all
+
+    if params[:ratings] && params[:sort_by]
+      submitted_ratings = permitted_ratings_params || session[:ratings]
+      if submitted_ratings
+        session[:ratings] = submitted_ratings
+        @movies = @movies.where(:rating => submitted_ratings)
+      else
+        session[:ratings] = @all_ratings
+      end
+
+      sort_column = params[:sort_by] || session[:sort_by]
+      if sort_column
+        session[:sort_by] = sort_column
+        @sorted_column_css[sort_column.to_sym] = 'hilite'
+        @movies = @movies.order("#{sort_column} asc")
+      else
+        @movies
+      end
+    else
+      submitted_ratings = permitted_ratings_params || session[:ratings]
+      sort_column = params[:sort_by] || session[:sort_by]
+
+      params_filled = params.merge(:ratings => submitted_ratings).merge(:sort_by => sort_column)
+      redirect_to movies_path(:params => session_params)
+    end
   end
 
   def new
@@ -49,4 +69,15 @@ class MoviesController < ApplicationController
     redirect_to movies_path
   end
 
+  private
+
+  def permitted_ratings_params
+    return unless params[:ratings]
+
+    ratings = []
+    params[:ratings].each do |rating, value|
+      ratings << rating if Movie.ratings.include?(rating)
+    end
+    ratings
+  end
 end
